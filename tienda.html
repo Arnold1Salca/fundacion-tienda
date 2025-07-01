@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Qanwan kani</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #f9f9f9;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 0 auto 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .producto {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            max-width: 500px;
+            background-color: white;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .producto img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+
+        .producto button {
+            margin-top: 10px;
+            background-color: #e74c3c;
+        }
+
+        #lista-productos {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Ocultar flechas en inputs tipo number */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Sube tu Producto</h1>
+
+    <form id="formulario">
+        <input type="text" id="nombre" placeholder="Nombre del producto" required>
+        <textarea id="descripcion" placeholder="Descripción del producto" required></textarea>
+        <input type="number" id="precio" placeholder="Precio (S/.)" step="0.01" min="0" required>
+        <input type="file" id="imagen" accept="image/*" required>
+        <button type="submit">Agregar Producto</button>
+    </form>
+
+    <h2>Productos Agregados</h2>
+    <div id="lista-productos"></div>
+
+    <script>
+        const formulario = document.getElementById('formulario');
+        const lista = document.getElementById('lista-productos');
+
+        // Mostrar productos guardados al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            const productosGuardados = JSON.parse(localStorage.getItem('productos')) || [];
+            productosGuardados.forEach(p => mostrarProducto(p));
+        });
+
+        formulario.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const nombre = document.getElementById('nombre').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const precio = document.getElementById('precio').value;
+            const imagenInput = document.getElementById('imagen');
+
+            if (imagenInput.files.length > 0) {
+                const archivo = imagenInput.files[0];
+                const lector = new FileReader();
+
+                lector.onload = function(evento) {
+                    const imagenBase64 = evento.target.result;
+                    const nuevoProducto = {
+                        id: Date.now(), // ID único
+                        nombre,
+                        descripcion,
+                        precio,
+                        imagen: imagenBase64
+                    };
+
+                    // Guardar en localStorage
+                    const productos = JSON.parse(localStorage.getItem('productos')) || [];
+                    productos.push(nuevoProducto);
+                    localStorage.setItem('productos', JSON.stringify(productos));
+
+                    mostrarProducto(nuevoProducto);
+                    formulario.reset();
+                };
+
+                lector.readAsDataURL(archivo);
+            }
+        });
+
+        function mostrarProducto(producto) {
+            const div = document.createElement('div');
+            div.classList.add('producto');
+            div.innerHTML = `
+                <h3>${producto.nombre}</h3>
+                <img src="${producto.imagen}" alt="Imagen del producto">
+                <p><strong>Descripción:</strong> ${producto.descripcion}</p>
+                <p><strong>Precio:</strong> S/. ${producto.precio}</p>
+                <button class="eliminar">Eliminar</button>
+            `;
+
+            div.querySelector('.eliminar').addEventListener('click', () => {
+                eliminarProducto(producto.id);
+                div.remove();
+            });
+
+            lista.prepend(div);
+        }
+
+        function eliminarProducto(id) {
+            const productos = JSON.parse(localStorage.getItem('productos')) || [];
+            const nuevosProductos = productos.filter(p => p.id !== id);
+            localStorage.setItem('productos', JSON.stringify(nuevosProductos));
+        }
+    </script>
+
+</body>
+</html>
+
